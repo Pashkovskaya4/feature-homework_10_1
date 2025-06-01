@@ -1,37 +1,48 @@
-def mask_account_card(account_info: str) -> str:
-    """Маскирует номер карты или счета."""
-    parts = account_info.split()
-    number = parts[-1]
-    name = " ".join(parts[:-1])
-
-    if "счет" in account_info.lower():
-        masked_number = "**" + number[-4:]
-    else:
-        # Маскировка карты: 7000 79** **** 6361
-        masked_number = f"{number[:4]} {number[4:6]}** **** {number[-4:]}"
-
-    return f"{name} {masked_number}"
+from datetime import datetime
+from typing import Union
 
 
-def get_date(date_str: str) -> str:
-    """Преобразует дату из формата '2024-03-11T02:26:18.671407' в '11.03.2024'."""
-    from datetime import datetime
+def mask_account_card(data: str) -> str:
+    """
+    Маскирует номера карт (16 цифр) и счетов (20 цифр) в переданной строке.
+    Форматы:
+    - Карта: 1234567890123456 -> 1234 56** **** 3456
+    - Счет: 12345678901234567890 -> **7890
+    - Сохраняет префиксы (Visa, Счет и т.д.)
+    """
+    if not isinstance(data, str):
+        raise ValueError("Input must be a string")
 
-    date_obj = datetime.strptime(date_str.split("T")[0], "%Y-%m-%d")
-    return date_obj.strftime("%d.%m.%Y")
+    if not data:
+        return data
 
-if __name__ == "__main__":
-    # Тест маскировки карт и счетов
-    test_cases = [
-        "Visa Platinum 7000792289606361",
-        "Maestro 1596837868705199",
-        "Счет 73654108430135874305",
-        "MasterCard 7158300734726758",
-        "Счет 35383033474447895560",
-    ]
+    # Извлекаем цифры и префикс
+    digits = ''.join(filter(str.isdigit, data))
+    prefix = next((word for word in data.split() if not word.isdigit()), "")
 
-    for case in test_cases:
-        print(f"{case} → {mask_account_card(case)}")
+    # Маскировка карты
+    if len(digits) == 16:
+        masked = f"{digits[:4]} {digits[4:6]}** **** {digits[-4:]}"
+        return f"{prefix} {masked}".strip() if prefix else masked
 
-    # Тест форматирования даты
-    print(get_date("2024-03-11T02:26:18.671407"))  # Должно вернуть "11.03.2024"
+    # Маскировка счета
+    elif len(digits) == 20:
+        return f"{prefix} **{digits[-4:]}".strip() if prefix else f"**{digits[-4:]}"
+
+    return data
+
+
+def get_date(date_string: str) -> str:
+    """
+    Преобразует дату из формата ISO 8601 (YYYY-MM-DDTHH:MM:SS.XXX)
+    в формат DD.MM.YYYY
+    """
+    if not date_string:
+        raise ValueError("Empty date string")
+
+    try:
+        date_part = date_string.split('T')[0]
+        date_obj = datetime.strptime(date_part, "%Y-%m-%d")
+        return date_obj.strftime("%d.%m.%Y")
+    except (ValueError, IndexError, AttributeError):
+        raise ValueError(f"Invalid date format: {date_string}")
