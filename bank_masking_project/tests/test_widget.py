@@ -34,7 +34,7 @@ class TestMaskAccountCard:
         ["1234567890123456"],
         {"card": "1234567890123456"},
     ])
-    def test_mask_invalid(self, invalid_input: Any) -> None:
+    def test_mask_invalid(self, invalid_input: any) -> None:
         with pytest.raises(ValueError):
             mask_account_card(invalid_input)
 
@@ -59,6 +59,6 @@ class TestGetDate:
         1234567890,
         datetime.now(),  # Объект datetime вместо строки
     ])
-    def test_get_date_invalid(self, invalid_date: Any) -> None:
+    def test_get_date_invalid(self, invalid_date: any) -> None:
         with pytest.raises(ValueError):
             get_date(invalid_date)
